@@ -404,38 +404,37 @@ const [
 // CARREGAR DADOS DO SUPABASE
 // ======================================
 
-async function carregarDados() {
+const CACHE_FRONTEND = "sistema_logistico_cache_v1";
 
+function aplicarDadosLocais(base: any) {
+  setUsuarios(base.usuarios ?? []);
+  setOperadores(base.operadores ?? []);
+  setAtividades(base.atividades ?? []);
+  setTransportadoras(base.transportadoras ?? []);
+  setMarketplaces(base.marketplaces ?? []);
+  setMotivos(base.motivos ?? []);
+  setProdutos(base.produtos ?? []);
+  setTrocas(base.trocas ?? []);
+  setDevolucoesLogistica(base.devolucoes ?? []);
+  setDevolucaoMarketplace(base.devolucaoMarketplace ?? []);
+  setFalhas(base.falhas ?? []);
+  setPrioridades(base.prioridades ?? []);
+  setProdutividade(base.produtividade ?? []);
+  setSlas(base.slas ?? []);
+}
+
+async function carregarDados() {
   try {
+    const armazenado = localStorage.getItem(CACHE_FRONTEND);
+    if (armazenado) {
+      aplicarDadosLocais(JSON.parse(armazenado));
+    }
 
     const [
-
-      usuariosData,
-      operadoresData,
-      atividadesData,
-      transportadorasData,
-      marketplacesData,
-      motivosData,
-      produtosData,
-
-      trocasData,
-      devolucoesData,
-      devolucaoMarketplaceData,
-      falhasData,
-      prioridadesData,
-      produtividadeData,
-      slasData
-
+      usuarios, operadores, atividades, transportadoras,
+      marketplaces, motivos, produtos, trocas, devolucoes,
+      devolucaoMarketplace, falhas, prioridades, produtividade, slas
     ] = await Promise.all([
-      
-
-    
-
-
-      // ==========================
-      // CONFIGURAÇÕES
-      // ==========================
-
       api.listarUsuarios(),
       api.listarOperadores(),
       api.listarAtividades(),
@@ -443,11 +442,6 @@ async function carregarDados() {
       api.listarMarketplaces(),
       api.listarMotivos(),
       api.listarProdutos(),
-
-      // ==========================
-      // PROCESSOS
-      // ==========================
-
       api.listarTrocas(),
       api.listarDevolucoesLogistica(),
       api.listarDevolucaoMarketplace(),
@@ -455,88 +449,24 @@ async function carregarDados() {
       api.listarPrioridades(),
       api.listarProdutividade(),
       api.listarSLAs()
-
     ]);
 
+    const baseAtualizada = {
+      usuarios, operadores, atividades, transportadoras,
+      marketplaces, motivos, produtos, trocas, devolucoes,
+      devolucaoMarketplace, falhas, prioridades, produtividade, slas
+    };
 
+    aplicarDadosLocais(baseAtualizada);
 
-    // ==========================
-    // CONFIGURAÇÕES
-    // ==========================
-
-    setUsuarios(
-      usuariosData ?? []
-    );
-
-    setOperadores(
-      operadoresData ?? []
-    );
-
-    setAtividades(
-      atividadesData ?? []
-    );
-
-    setTransportadoras(
-      transportadorasData ?? []
-    );
-
-    setMarketplaces(
-      marketplacesData ?? []
-    );
-
-    setMotivos(
-      motivosData ?? []
-    );
-
-    setProdutos(
-      produtosData ?? []
-    );
-
-
-
-    // ==========================
-    // PROCESSOS
-    // ==========================
-
-    setTrocas(
-      trocasData ?? []
-    );
-
-    setDevolucoesLogistica(
-      devolucoesData ?? []
-    );
-
-    setDevolucaoMarketplace(
-      devolucaoMarketplaceData ?? []
-    );
-
-    setFalhas(
-      falhasData ?? []
-    );
-
-    setPrioridades(
-      prioridadesData ?? []
-    );
-
-    setProdutividade(
-      produtividadeData ?? []
-    );
-
-    setSlas(
-      slasData ?? []
-    );
-
+    try {
+      localStorage.setItem(CACHE_FRONTEND, JSON.stringify(baseAtualizada));
+    } catch (erroCache) {
+      console.log("Não foi possível atualizar o cache local.", erroCache);
+    }
+  } catch (error) {
+    console.error("Erro ao carregar dados do sistema:", error);
   }
-
-  catch (error) {
-
-    console.error(
-      "Erro ao carregar dados do sistema:",
-      error
-    );
-
-  }
-
 }
 
 
