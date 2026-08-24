@@ -76,7 +76,7 @@ const buttonStyle = {
   fontWeight: 700
 };
 
-const STATUS_FINALIZADOS = ["Enviado", "Cancelado", "Estoque"];
+const STATUS_FINALIZADOS = ["Enviado", "Cancelado", "Estoque", "RETIRADAS"];
 const STATUS_PENDENTES = ["Recebido", "Não entregue", "Em contato", "Reenviar", "Para estoque"];
 
 function obterDataHoje(): string {
@@ -129,7 +129,8 @@ function decisaoPorStatus(status: string): string {
     Enviado: "Reenviado",
     Cancelado: "Cancelado",
     "Para estoque": "Aguardando estoque",
-    Estoque: "Estornado"
+    Estoque: "Estornado",
+    RETIRADAS: "Retiradas"
   };
   return decisoes[status] ?? "";
 }
@@ -325,6 +326,10 @@ export default function DevolucaoLogistica() {
   function alterarStatus(novoStatus: string) {
     setEditStatus(novoStatus);
     setEditDecisaoFinal(decisaoPorStatus(novoStatus));
+    if (novoStatus === "RETIRADAS") {
+      setEditValorFrete("");
+      setEditValorEstorno("");
+    }
   }
 
   async function registrarContato() {
@@ -399,8 +404,8 @@ export default function DevolucaoLogistica() {
       const dataInformadaAnterior = String(registroSelecionado.data_informada_entrega ?? "");
       const freteAnterior = Number(registroSelecionado.valor_frete ?? 0);
       const estornoAnterior = Number(registroSelecionado.valor_estorno ?? 0);
-      const valorFrete = converterValorMonetario(editValorFrete);
-      const valorEstorno = converterValorMonetario(editValorEstorno);
+      const valorFrete = editStatus === "RETIRADAS" ? 0 : converterValorMonetario(editValorFrete);
+      const valorEstorno = editStatus === "RETIRADAS" ? 0 : converterValorMonetario(editValorEstorno);
 
       const statusFoiAlterado = statusAnterior !== editStatus;
       let registroAtualizado: RegistroDevolucao = registroSelecionado;
@@ -776,6 +781,7 @@ function FormularioDevolucao(props: FormularioProps) {
             <option>Cancelado</option>
             <option>Para estoque</option>
             <option>Estoque</option>
+            <option>RETIRADAS</option>
           </select>
         </Campo>
         <Campo label="Responsável">
@@ -896,7 +902,8 @@ function StatusBadge({ status }: { status: string }) {
     Enviado: { fundo: "#dcfce7", texto: "#15803d" },
     Cancelado: { fundo: "#fee2e2", texto: "#b91c1c" },
     "Para estoque": { fundo: "#ffedd5", texto: "#c2410c" },
-    Estoque: { fundo: "#d1fae5", texto: "#047857" }
+    Estoque: { fundo: "#d1fae5", texto: "#047857" },
+    RETIRADAS: { fundo: "#f3e8ff", texto: "#7e22ce" }
   };
   const cor = cores[status] ?? { fundo: "#f1f5f9", texto: "#475569" };
   return <span style={{ display: "inline-block", padding: "5px 9px", borderRadius: "999px", background: cor.fundo, color: cor.texto, fontSize: "12px", fontWeight: 800 }}>{status}</span>;
@@ -983,6 +990,14 @@ function calcularResultados(registros: RegistroDevolucao[]): DadoResultado[] {
       valor: registros.filter((item) => item.status === "Cancelado").length,
       cor: "#dc2626",
       icone: "❌"
+    },
+    {
+      nome: "Retiradas",
+      valor: registros.filter(
+        (item) => item.status === "RETIRADAS" || item.decisao_final === "Retiradas"
+      ).length,
+      cor: "#7c3aed",
+      icone: "🏷️"
     }
   ];
 }
@@ -1477,8 +1492,14 @@ function PainelEdicao(props: PainelProps) {
           <Campo label="Cliente"><input style={{ ...inputStyle, background: "#f8fafc" }} value={String(props.registro.cliente ?? "")} readOnly /></Campo>
           <Campo label="Transportadora"><input style={{ ...inputStyle, background: "#f8fafc" }} value={String(props.registro.transportadora ?? "")} readOnly /></Campo>
           <Campo label="Motivo"><input style={{ ...inputStyle, background: "#f8fafc" }} value={String(props.registro.motivo ?? "")} readOnly /></Campo>
-          <Campo label="Status"><select style={inputStyle} value={props.status} disabled={props.somenteLeitura} onChange={(e) => props.onStatusChange(e.target.value)}><option>Recebido</option><option>Não entregue</option><option>Em contato</option><option>Reenviar</option><option>Enviado</option><option>Cancelado</option><option>Para estoque</option><option>Estoque</option></select></Campo>
+          <Campo label="Status"><select style={inputStyle} value={props.status} disabled={props.somenteLeitura} onChange={(e) => props.onStatusChange(e.target.value)}><option>Recebido</option><option>Não entregue</option><option>Em contato</option><option>Reenviar</option><option>Enviado</option><option>Cancelado</option><option>Para estoque</option><option>Estoque</option><option>RETIRADAS</option></select></Campo>
           <Campo label="Decisão final"><input style={{ ...inputStyle, background: "#f8fafc" }} value={props.decisaoFinal} readOnly /></Campo>
+
+          {props.status === "RETIRADAS" && (
+            <div style={{ padding: "13px", borderRadius: "10px", background: "#f3e8ff", border: "1px solid #d8b4fe", color: "#6b21a8", fontSize: "13px", fontWeight: 700 }}>
+              Retirada finalizada sem custo de frete e sem valor de estorno.
+            </div>
+          )}
 
           {casoNaoEntregue && (
             <div style={{ display: "grid", gap: "14px", padding: "16px", borderRadius: "12px", background: "#fef2f2", border: "1px solid #fecaca" }}>

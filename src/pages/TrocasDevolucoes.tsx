@@ -394,8 +394,8 @@ const [fpTamanho, setFpTamanho] = useState("");
 
     if (tipoFalha === "Falha de Peça") {
 
-      if (!fpSku.trim() || !fpPedido.trim() || !fpResponsavel) {
-        window.alert("Informe SKU, pedido e operador responsável.");
+      if (!fpSku.trim() || !fpProduto.trim() || !fpPedido.trim() || !fpResponsavel) {
+        window.alert("Informe SKU, nome da peça, pedido e operador responsável.");
         return;
       }
 
@@ -1581,8 +1581,8 @@ value={item.nome}
 <input
   style={inputStyle}
   value={fpProduto}
-  readOnly
-  placeholder="Produto"
+  onChange={(e) => setFpProduto(e.target.value)}
+  placeholder="Nome da peça"
 />
 
 <input
@@ -2147,6 +2147,7 @@ function TabelaRegistros({
               <th style={thStyle}>Data</th>
               <th style={thStyle}>Tipo</th>
               <th style={thStyle}>Pedido</th>
+              <th style={thStyle}>Nome da peça</th>
               <th style={thStyle}>Status</th>
               <th style={thStyle}>Responsável</th>
               <th style={thStyle}>Ação</th>
@@ -2189,6 +2190,7 @@ function TabelaRegistros({
                   <td style={tdStyle}>{obterDataRegistro(item)}</td>
                   <td style={{ ...tdStyle, fontWeight: 700 }}>{item.tipo || "-"}</td>
                   <td style={tdStyle}>{item.pedido || "-"}</td>
+                  <td style={tdStyle}>{item.produto || "-"}</td>
                   <td style={tdStyle}><SeletorStatus item={item} onAlterar={onAlterarStatus} /></td>
                   <td style={tdStyle}>{item.responsavel || item.operador || "-"}</td>
                   <td style={tdStyle}><BotaoExcluir onClick={() => void onExcluir(item)} /></td>
